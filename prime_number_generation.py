@@ -28,42 +28,83 @@ def fermat(N: int, k: int) -> bool:
     return True
 
 
+# def miller_rabin(N: int, k: int) -> bool:
+#     """
+#     Returns True if N is prime
+#     """
+#     if N % 2 == 0 and N > 2:
+#         return False
+#     t: int = 0
+#     u: int = N - 1
+#     while True:
+#         u = u // 2
+#         if u % 2 == 1:
+#             break
+#         else:
+#             t += 1
+#     bases = []
+#     for i in range(k):
+#         bases.append(random.randint(1, N - 1))
+#     for i in range(k):
+#         results = []
+#         for j in range(t + 1):
+#             results.append(mod_exp(bases[i], ((2 ** j) * u), N))
+#         if results[t] != 1:
+#             return False
+#         if results[0] == 1:
+#             continue
+#         for j in range(1, t + 1):
+#             if results[j] == 1:
+#                 if results[j - 1] % N != -1 % N:
+#                     return False
+#     return True
+
 def miller_rabin(N: int, k: int) -> bool:
-    """
-    Returns True if N is prime
-    """
     if N % 2 == 0 and N > 2:
         return False
-    t: int = 0
-    u: int = N - 1
+    t: int = 1
+    u: int = 0
     while True:
-        u = u // 2
-        t += 1
+        u = (N - 1) // (2**t)
         if u % 2 == 1:
             break
-    bases = []
-    for i in range(k):
-        bases.append(random.randint(1, N - 1))
-    for i in bases:
-        results = []
-        for j in range(t + 1):
-            results.append(mod_exp(bases[i], ((2 ** j) * u), N))
-        if results[t] != 1:
-            return False
-        if results[0] == 1 or results[0] == N - 1:
+        else:
+            t += 1
             continue
-        for j in range(1, t + 1):
-            if results[j] != N - 1:
-                return False
+    for i in range(k):
+        rand_num = random.randint(1, N-1)
+        if mil_rab_support(u, t, rand_num, N) == False:
+            return False
     return True
+
+def mil_rab_support(u: int, t: int, a: int, N: int) -> bool:
+    a_exponent = []
+    if mod_exp(a, ((2 ** t) * u), N) != 1:
+        return False
+    for i in range(t + 1):
+        a_exponent.append(mod_exp(a, ((2 ** i) * u), N))
+    if a_exponent[0] != 1:
+        ind: int = 1
+        while True:
+            if a_exponent[ind] == 1:
+                break
+            else:
+                ind += 1
+        if a_exponent[ind - 1] % N != -1 % N:
+            return False
+        else:
+            return True
+    else:
+        return True
 
 
 def generate_large_prime(n_bits: int) -> int:
     while True:
         prime_num = random.getrandbits(n_bits)
-        primality: bool = miller_rabin(prime_num, 20)
+        primality: bool = fermat(prime_num, 20)
         if primality == True:
-            return prime_num
+            if prime_num.bit_length() == n_bits:
+                return prime_num
         else:
             continue
     """Generate a random prime number with the specified bit length"""

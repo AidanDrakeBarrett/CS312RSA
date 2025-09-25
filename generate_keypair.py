@@ -2,6 +2,7 @@ import sys
 from time import time
 
 import prime_number_generation as prime
+sys.setrecursionlimit(4000)
 
 # When trying to find a relatively prime e for (p-1) * (q-1)
 # use this list of 25 primes
@@ -70,7 +71,7 @@ def ext_euclid(a: int, b: int) -> tuple[int, int, int]:
 def ext_euclid_recursion(a: int, b: int) -> tuple[int, int, int]:
     if b == 0:
         return 1, 0, a
-    x, y, d = ext_euclid(b, (a % b))
+    x, y, d = ext_euclid_recursion(b, (a % b))
     return y, (x - (a // b) * y), d
 
 
