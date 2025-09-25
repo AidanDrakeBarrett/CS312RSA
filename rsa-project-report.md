@@ -15,7 +15,26 @@ modulo operation on each power of 2 that makes up the exponent, *y.*
 | 3 | 1 | 21 | 1 | 3 |
 | 3 | 0 | 21 |   | 1 |
 
-fermat(N, k) #N is a positive integer being tested for
+>fermat(N, k): #Test positive integer *N* *k* times for primality  
+> &nbsp; a = set of *k* positive integers less than *N* - 2  
+> &nbsp; for all in a:  
+> &nbsp; &nbsp; if ModExp(a, N - 1, N) == 1:  
+> &nbsp; &nbsp; &nbsp; return prime  
+> &nbsp; &nbsp; else:  
+> &nbsp; &nbsp; &nbsp; return composite  
+
+>GenPrime(nBits): #nBits is the number is bits long the prime must be  
+> &nbsp; while true:  
+> &nbsp; &nbsp; num = randomBits(nBits)  
+> &nbsp; &nbsp; if fermat(num) == true:  
+> &nbsp; &nbsp; &nbsp; return num  
+> &nbsp; &nbsp; else:  
+> &nbsp; &nbsp; &nbsp; continue  
+
+I will track my empirical data by timing how long it
+takes to perform each function given inputs of various
+lengths. I can track memory usage this way, too.
+ 
 
 ### Theoretical Analysis - Prime Number Generation
 
@@ -60,6 +79,11 @@ we have a total memory complexity of *O(n^2)*.
 ## Core
 
 ### Design Experience
+Extended Euclid takes two positive integers, _a_ and _b_ where _a_ >= _b_ >= 0
+and outputs values _x, y,_ and _d_ where _d_ is the greatest common divisor
+of _a_ and _b_, and _ax_ + _by_ = _d_. This is used for finding the second
+key in an RSA pair, where the first key is (_N, e_) where _N = pq_ and _n = (p - 1)(q - 1)._
+To generate a key pair
 
 
 
