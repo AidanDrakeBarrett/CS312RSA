@@ -1,7 +1,7 @@
 import sys
 from time import time
 import random
-
+sys.setrecursionlimit(5000)
 
 # You will need to implement this function and change the return value.
 def mod_exp(x: int, y: int, N: int) -> int:
@@ -26,38 +26,6 @@ def fermat(N: int, k: int) -> bool:
         if modulation != 1:
             return False
     return True
-
-
-# def miller_rabin(N: int, k: int) -> bool:
-#     """
-#     Returns True if N is prime
-#     """
-#     if N % 2 == 0 and N > 2:
-#         return False
-#     t: int = 0
-#     u: int = N - 1
-#     while True:
-#         u = u // 2
-#         if u % 2 == 1:
-#             break
-#         else:
-#             t += 1
-#     bases = []
-#     for i in range(k):
-#         bases.append(random.randint(1, N - 1))
-#     for i in range(k):
-#         results = []
-#         for j in range(t + 1):
-#             results.append(mod_exp(bases[i], ((2 ** j) * u), N))
-#         if results[t] != 1:
-#             return False
-#         if results[0] == 1:
-#             continue
-#         for j in range(1, t + 1):
-#             if results[j] == 1:
-#                 if results[j - 1] % N != -1 % N:
-#                     return False
-#     return True
 
 def miller_rabin(N: int, k: int) -> bool:
     if N % 2 == 0 and N > 2:
