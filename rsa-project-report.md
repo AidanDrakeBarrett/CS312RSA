@@ -6,7 +6,9 @@
 
 The ModExp algorithm takes as input integers *x, y,* and *N*. It outputs *x^y mod N.*
 It reduces the amount of time it takes to perform a modular exponent by performing a
-modulo operation on each power of 2 that makes up the exponent, *y.*
+modulo operation on each power of 2 that makes up the exponent, *y.*  
+
+#### Modular Exponentiation
 
 | x | y | N | z | Return value |
 |---|---|---|---|--------------|
@@ -16,20 +18,20 @@ modulo operation on each power of 2 that makes up the exponent, *y.*
 | 3 | 0 | 21 |   | 1 |
 
 >fermat(N, k): #Test positive integer *N* *k* times for primality  
-> &nbsp; a = set of *k* positive integers less than *N* - 2  
-> &nbsp; for all in a:  
-> &nbsp; &nbsp; if ModExp(a, N - 1, N) == 1:  
-> &nbsp; &nbsp; &nbsp; return prime  
-> &nbsp; &nbsp; else:  
-> &nbsp; &nbsp; &nbsp; return composite  
+> &nbsp;&nbsp; a = set of *k* positive integers less than *N* - 2  
+> &nbsp;&nbsp; for all in a:  
+> &nbsp;&nbsp; &nbsp;&nbsp; if ModExp(a, N - 1, N) == 1:  
+> &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; return prime  
+> &nbsp;&nbsp; &nbsp;&nbsp; else:  
+> &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; return composite  
 
->GenPrime(nBits): #nBits is the number is bits long the prime must be  
-> &nbsp; while true:  
-> &nbsp; &nbsp; num = randomBits(nBits)  
-> &nbsp; &nbsp; if fermat(num) == true:  
-> &nbsp; &nbsp; &nbsp; return num  
-> &nbsp; &nbsp; else:  
-> &nbsp; &nbsp; &nbsp; continue  
+>genPrime(nBits): #nBits is the number is bits long the prime must be  
+> &nbsp;&nbsp; while true:  
+> &nbsp;&nbsp; &nbsp;&nbsp; num = randomBits(nBits)  
+> &nbsp;&nbsp; &nbsp;&nbsp; if fermat(num) == true:  
+> &nbsp;&nbsp; &nbsp;&nbsp; &nbsp; return num  
+> &nbsp;&nbsp; &nbsp;&nbsp; else:  
+> &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; continue  
 
 I will track my empirical data by timing how long it
 takes to perform each function given inputs of various
@@ -141,7 +143,7 @@ is **O(n^2)**.
 
 ![img](graph1.png)
 
-Empirical order of growth matches theoretical order of growth
+Empirical order of growth matches theoretical order of growth.
 
 ## Core
 
@@ -150,121 +152,145 @@ Extended Euclid takes two positive integers, _a_ and _b_ where _a_ >= _b_ >= 0
 and outputs values _x, y,_ and _d_ where _d_ is the greatest common divisor
 of _a_ and _b_, and _ax_ + _by_ = _d_. This is used for finding the second
 key in an RSA pair, where the first key is (_N, e_) where _N = pq_ and _n = (p - 1)(q - 1)._
-To generate a key pair
+To generate a key pair, generate two large primes, _p_ and _q_. Multiply those together to get _N_.
+Multiply _p - 1_ and _q - 1_ to get _n_. Find a number that is coprime to _n_ by iterating through a list of prime
+numbers, and passing them through Euclid's Extended Algorithm. The goal is to find the smallest prime number that is
+coprime with _n_. The number that is found is _e_. Two numbers are coprime when their
+greatest common divisor is 1. When Euclid's Extended Algorithm returns 1 as the third value in its output, the value
+tested for *e* will be coprime with *n*. By finding _e_ using Euclid's extended algorithm, we also find the values _x_
+and _y_ such that _nx + ey = 1_. In this case, _y_ will be the value that will be used for the private key in the
+keypair. If _y_ is negative, add _n_ to its value to get a positive value that will still work in the key pair. The
+private key is therefore _(N, y)_ and the public key is _(N, e)_.
 
+#### Euclid's Extended Algorithm
+p = 7  
+q = 11  
+N = 77  
+n = 60  
+e = 7
+
+|a|b|x|y|d|Return value 1|Return value 2|Return value 3|
+|-|-|-|-|-|--------------|--------------|--------------|
+|60|7|-1|2|1|2|-17|1|
+|7|4|1|-1|1|-1|2|1|
+|4|3|0|1|1|1|-1|1|
+|3|1|1|0|1|0|1|1|
+|1|0||||1|0|1|
+
+60 * 2 + 7 * -17 = 1  
+In the case of finding an RSA Key, 60 would be added to the value of -17, to get 43, generating the key pair (77, 7) and
+(77, 43).
+
+>genPair(nBits):  
+> &nbsp;&nbsp;p = genPrime(nBits)  
+> &nbsp;&nbsp;q = genPrime(nBits)  
+> &nbsp;&nbsp;N = p * q  
+> &nbsp;&nbsp;n = (p - 1) * (q - 1)  
+> &nbsp;&nbsp;while true:  
+> &nbsp;&nbsp;&nbsp;&nbsp;e = nextLowestPrime()  
+> &nbsp;&nbsp;&nbsp;&nbsp;x, y, d = extEuc(n, e)  
+> &nbsp;&nbsp;&nbsp;&nbsp;if d == 1:  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return N, e, y
+
+I can track how much time it takes to generate key pairs by timing
+my code when given inputs of various lengths
 
 
 ### Theoretical Analysis - Key Pair Generation
 
+```py
+def generate_key_pairs(n_bits) -> tuple[int, int, int]:
+    """
+    Generate RSA public and private key pairs.
+    Randomly creates a p and q (two large n-bit primes)
+    Computes N = p*q
+    Computes e and d such that e*d = 1 mod (p-1)(q-1)
+    Return N, e, and d
+    """
+    p = prime.generate_large_prime(n_bits)
+    q: int
+    while True:
+        q = prime.generate_large_prime(n_bits)
+        if q == p:
+            continue
+        else:
+            break
+    N = p * q
+    p_and_q = (p - 1) * (q - 1)
+    for i in primes:
+        x, y, d = ext_euclid(p_and_q, primes[i])
+        if d == 1:
+            return N, primes[i], y
+    raise Exception("None of the provided primes worked with p and q.")
+
+def ext_euclid(a: int, b: int) -> tuple[int, int, int]:
+    x, y, d = ext_euclid_recursion(a, b)
+    if y < 0:
+        y += a
+        return x, y, d
+    else:
+        return x, y, d
+
+def ext_euclid_recursion(a: int, b: int) -> tuple[int, int, int]:
+    if b == 0:
+        return 1, 0, a
+    x, y, d = ext_euclid_recursion(b, (a % b))
+    return y, (x - (a // b) * y), d
+
+```
+
 #### Time 
 
-*Fill me in*
+Generating two prime numbers of bit size _n_ is _O(n^3)_ as established in the baseline analysis. _N = p * q_ and
+_p_and_q = (p - 1) * (q - 1)_ will both be _O(n^2)_ because multiplying an _n_-bit number by an _n_-bit number is will
+require _O(n^2)_ time. Since we can not predict how many prime numbers will need to be tested before we find one coprime
+with _p_and_q_, we will assume the number of iterations performed by the forloop is constant.
+
+ext_euclid() will recurse approximately _O(n)_ times, because every two recursions will decrease the length of both _a_
+and _b_ by one bit each. Each layer of recursion will also perform a division, which is _O(n^2)_. This means that
+ext_euclid() has a time complexity of _O(n^3)_, which is equal to the time complexity of generating a prime number of _n_
+bits. Since _O(n^3)_ is the largest complexity in generate_key_pairs, its final time complexity is **O(n^3)** where _n_
+is the number of bits that each prime factor of _N_ will be in length.
 
 #### Space
 
-*Fill me in*
+ext_euclid() will again need _O(n)_ recursions, and since intermediate results of division can again be stored in a buffer
+of length _O(n)_ bits, then the needed space for ext_euclid is _O(n^2)_. This is equal to the other major step in
+generating key pairs, generate_larg_prime(), therefore the total space complexity of generating a key pair is **O(n^2)**
+where _n_ is the number of bits each prime factor of _N_ will be in length.
 
 ### Empirical Data
 
 | N    | time (ms) |
 |------|-----------|
-| 64   |           |
-| 128  |           |
-| 256  |           |
-| 512  |           |
-| 1024 |           |
-| 2048 |           |
+| 64   | 6.98      |
+| 128  | 68.86     |
+| 256  | 298.05    |
+| 512  | 2085.5    |
+| 1024 | 16636.14  |
+| 2048 | 198569.38 |
 
 ### Comparison of Theoretical and Empirical Results
 
-- Theoretical order of growth: *copy from section above* 
-- Measured constant of proportionality for theoretical order: 
+- Theoretical order of growth: **O(n^3)** 
+- Measured constant of proportionality for theoretical order: **2.31165182777e-5**
 - Empirical order of growth (if different from theoretical): 
 - Measured constant of proportionality for empirical order: 
 
-![img](img.png)
+![img](graph2.png)
 
-*Fill me in*
-
-## Stretch 1
-
-### Design Experience
-
-*Fill me in*
-
-### Theoretical Analysis - Encrypt and Decrypt
-
-#### Time 
-
-*Fill me in*
-
-#### Space
-
-*Fill me in*
-
-### Empirical Data
-
-#### Encryption
-
-| N    | time (ms) |
-|------|-----------|
-| 64   |           |
-| 128  |           |
-| 256  |           |
-| 512  |           |
-| 1024 |           |
-| 2048 |           |
-
-#### Decryption
-
-| N    | time (ms) |
-|------|-----------|
-| 64   |           |
-| 128  |           |
-| 256  |           |
-| 512  |           |
-| 1024 |           |
-| 2048 |           |
-
-### Comparison of Theoretical and Empirical Results
-
-#### Encryption
-
-- Theoretical order of growth: *copy from section above* 
-- Measured constant of proportionality for theoretical order: 
-- Empirical order of growth (if different from theoretical): 
-- Measured constant of proportionality for empirical order: 
-
-![img](img.png)
-
-*Fill me in*
-
-#### Decryption
-
-- Theoretical order of growth: *copy from section above* 
-- Measured constant of proportionality for theoretical order: 
-- Empirical order of growth (if different from theoretical): 
-- Measured constant of proportionality for empirical order: 
-
-![img](img.png)
-
-*Fill me in*
-
-### Encrypting and Decrypting With A Classmate
-
-*Fill me in*
-
-## Stretch 2
-
-### Design Experience
-
-*Fill me in*
-
-### Discussion: Probabilistic Natures of Fermat and Miller Rabin 
-
-*Fill me in*
+Empirical order of growth matches theoretical order of growth.
 
 ## Project Review
 
-*Fill me in*
+For my project review I talked with James Teuscher for my project review. We went over time and space complexities and
+implementation strategies. We both took most of our source code from the text book because so much of it is written very
+in pseudocode. We agreed on our theoretical time complexities, however, James did find that for his implementations of
+prime and key generation, his time complexities were between O(n^2.65) to O(n^2.9). My strategy of cutting down on
+runtime in my prime number test by immediately checking for even numbers was new to him. I had not done my timing yet,
+but I had passed all the tests.
+
+James was less sure of his theoretical analysis of his runtimes. I understood that as I had struggled with that the
+first time I took this class. I was more sure of mine because I had read the textbook more closely and gotten my time
+complexities and analysises directly from it.
 
