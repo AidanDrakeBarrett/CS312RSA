@@ -36,6 +36,9 @@ modulo operation on each power of 2 that makes up the exponent, *y.*
 I will track my empirical data by timing how long it
 takes to perform each function given inputs of various
 lengths.
+
+All of this was shared and discussed with a friend of mine, Daniel Whitmer,
+who was able to understand and follow my explanations, and is also studying computer science.
  
 
 ### Theoretical Analysis - Prime Number Generation
@@ -86,12 +89,12 @@ For mod_exp(), if we measure *n* as the bit length of *y*, we know that we will 
 *log(y) = n* layers of recursion. Within each layer, we will need to perform a multiplication
 of two integers that are less than or equal to the size of *y*, giving both numbers
 a size of *O(n)*. Multiplying two n-bit numbers is *O(n^2)*, and if we multiply that by
-the amount of recursive calls we make, we have a total complexity of *O(n^3)*.
+the number of recursive calls we make, we have a total complexity of *O(n^3)*.
 
 We can then move on to fermat(). fermat() uses random.randint(1, N - 1), which has a complexity
 of *O(n)* where *n* is the range between _1_ and _N - 1_ in binary. This is because randint() generates
-*O(log(range))* random bits, and then adds the result to the lower number in the range.
-after this, it uses the random integer in the mod_exp() algorithm. These are done sequentially,
+*O(log(range))* random bits and then adds the result to the lower number in the range.
+After this, it uses the random integer in the mod_exp() algorithm. These are done sequentially,
 and therefore mod_exp()'s time complexity dominates because it is higher. If we assume the value of _k_
 to be a constant-- especially since we are using it as a constant in the performance tests--
 this means we have _k_ iterations of _O(n^3)_, yielding a time complexity of _O(n^3)_.
@@ -106,7 +109,7 @@ time complexity is **O(n^3)**.
 
 #### Space
 
-Returning to mod_exp needing *O(n)* layers of recursion, we can store the multiplication result
+Continuing with using *n* as the number of bits that makes up the input and returning to mod_exp needing *O(n)* layers of recursion, we can store the multiplication result
 at each layer in a buffer of at most size *2n*, multiplying an n-bit number
 by another is only at most *2n* in size for the result. This leads to
 a level complexity of *O(n)*. Multiplying that by *n* recursions,
@@ -115,7 +118,7 @@ we have a total memory complexity of *O(n^2)*.
 fermat() will clear its memory after ever iteration of its loop, so we can treat the memory used for
 counting iterations as a constant. Generating a random integer between _1_ and _N - 1_
 will use _O(n)_ memory because it will need to allocate _n_ bits to iterate over. mod_exp()'s
-space complexity is higher, so it dominates and leaves fermat() with the same complexity of _O(n^2)_.
+space complexity is higher, so it dominates and leaves fermat() with the same complexity _O(n^2)_.
 
 generate_large_prime() uses _O(n)_ space where _n_ is the bit length for the prime it needs to output.
 getrandbits() will need to store its output in _n_ bits, and the condition checks are constant and then _O(logn)_
@@ -195,6 +198,9 @@ In the case of finding an RSA Key, 60 would be added to the value of -17, to get
 I can track how much time it takes to generate key pairs by timing
 my code when given inputs of various lengths
 
+All of this was shared and discussed with a friend of mine, Daniel Whitmer,
+who was able to understand and follow my explanations, and is also studying computer science.
+
 
 ### Theoretical Analysis - Key Pair Generation
 
@@ -242,7 +248,7 @@ def ext_euclid_recursion(a: int, b: int) -> tuple[int, int, int]:
 #### Time 
 
 Generating two prime numbers of bit size _n_ is _O(n^3)_ as established in the baseline analysis. _N = p * q_ and
-_p_and_q = (p - 1) * (q - 1)_ will both be _O(n^2)_ because multiplying an _n_-bit number by an _n_-bit number is will
+_p_and_q = (p - 1) * (q - 1)_ will both be _O(n^2)_ because multiplying an _n_-bit number by an _n_-bit number will
 require _O(n^2)_ time. Since we can not predict how many prime numbers will need to be tested before we find one coprime
 with _p_and_q_, we will assume the number of iterations performed by the forloop is constant.
 
@@ -254,7 +260,7 @@ is the number of bits that each prime factor of _N_ will be in length.
 
 #### Space
 
-ext_euclid() will again need _O(n)_ recursions, and since intermediate results of division can again be stored in a buffer
+Continuing by measuring space complexity in terms of *n*, the number of bits that make up the input, ext_euclid() will again need _O(n)_ recursions, and since intermediate results of division can again be stored in a buffer
 of length _O(n)_ bits, then the needed space for ext_euclid is _O(n^2)_. This is equal to the other major step in
 generating key pairs, generate_larg_prime(), therefore the total space complexity of generating a key pair is **O(n^2)**
 where _n_ is the number of bits each prime factor of _N_ will be in length.
@@ -284,13 +290,12 @@ Empirical order of growth matches theoretical order of growth.
 ## Project Review
 
 For my project review I talked with James Teuscher for my project review. We went over time and space complexities and
-implementation strategies. We both took most of our source code from the text book because so much of it is written very
-in pseudocode. We agreed on our theoretical time complexities, however, James did find that for his implementations of
-prime and key generation, his time complexities were between O(n^2.65) to O(n^2.9). My strategy of cutting down on
-runtime in my prime number test by immediately checking for even numbers was new to him. I had not done my timing yet,
-but I had passed all the tests.
+implementation strategies. We both took most of our source code from the textbook because so much of it is written very
+in pseudocode. We agreed on our theoretical time complexities; however, James did find that for his implementations of
+prime and key generation, his time complexities were between O(n^2.65) to O(n^2.9). I did not closely analyze my empirical timing complexity to find such a level of precision, however, that is a possibility for future projects using tools like Desmos. My strategy of cutting down on
+runtime in my prime number test by immediately checking for even numbers was new to him. 
 
 James was less sure of his theoretical analysis of his runtimes. I understood that as I had struggled with that the
-first time I took this class. I was more sure of mine because I had read the textbook more closely and gotten my time
-complexities and analysises directly from it.
+first time I took this class. I was surer of mine because I had read the textbook more closely and gotten my time
+complexities and analyses directly from it. We discussed the ways he performed his analysis by researching the algorithms on the internet, which is a safe choice because we are using a common encryption method.
 
